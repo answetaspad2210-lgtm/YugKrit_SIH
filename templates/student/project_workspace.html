@@ -1,0 +1,93 @@
+{% extends "student/_base.html" %}
+{% block title %}{{ project.name }} — {{ app_name }}{% endblock %}
+{% block dashboard_content %}
+<div class="breadcrumbs"><a href="{{ url_for('student.projects') }}">My Projects</a> / {{ project.project_code }}</div>
+<div class="page-header" data-project-live="{{ project.id }}">
+  <div><h1>{{ project.name }}</h1><p>{{ project.challenge.title }}</p></div>
+  <span class="badge {{ 'badge-success' if project.status in ['COMPLETED','VERIFIED'] else 'badge-neutral' }}" data-live-project-status style="font-size:13px;padding:7px 14px;">{{ project.status }}</span>
+</div>
+
+<div class="tabs" data-tabs>
+  <a class="tab-link {{ 'active' if tab=='overview' }}" href="?tab=overview">Overview</a>
+  <a class="tab-link {{ 'active' if tab=='problem' }}" href="?tab=problem">Problem</a>
+  <a class="tab-link {{ 'active' if tab=='milestones' }}" href="?tab=milestones">Milestones</a>
+  <a class="tab-link {{ 'active' if tab=='tasks' }}" href="?tab=tasks">Tasks</a>
+  <a class="tab-link {{ 'active' if tab=='team' }}" href="?tab=team">Team</a>
+  <a class="tab-link {{ 'active' if tab=='industry' }}" href="?tab=industry">Industry Support</a>
+  <a class="tab-link {{ 'active' if tab=='files' }}" href="?tab=files">Files</a>
+</div>
+
+{% if tab == 'overview' %}
+  <div class="card card-body">
+    <h3>Progress</h3>
+    {% for label, val in [('Research', project.research_progress), ('Design', project.design_progress), ('Prototype', project.prototype_progress), ('Testing', project.testing_progress), ('Validation', project.validation_progress)] %}
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>{{ label }}</span><span data-live-progress-label="{{ label|lower }}">{{ val }}%</span></div>
+      <div class="progress-bar-track"><div class="progress-bar-fill" data-live-progress="{{ label|lower }}" style="width:{{ val }}%;"></div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+{% elif tab == 'problem' %}
+  <div class="card card-body">
+    <h3>{{ project.challenge.title }}</h3>
+    <p>{{ project.challenge.description }}</p>
+    <div class="detail-list">
+      <div class="row"><span class="label">Affected Population</span><span class="value">{{ project.challenge.affected_population }}</span></div>
+      <div class="row"><span class="label">Location</span><span class="value">{{ project.challenge.location.district if project.challenge.location else '—' }}</span></div>
+    </div>
+  </div>
+
+{% elif tab == 'milestones' %}
+  {% for m in project.milestones|sort(attribute='sequence') %}
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <h4 style="margin-bottom:4px;">{{ loop.index }}. {{ m.title }}</h4>
+        {% if m.reviewer_comment %}<p style="font-size:12.5px;color:var(--ink-500);margin:0;">Reviewer: {{ m.reviewer_comment }}</p>{% endif %}
+      </div>
+      <span class="badge {{ 'badge-success' if m.status=='COMPLETED' else ('badge-warning' if m.status in ['SUBMITTED','UNDER_REVIEW'] else 'badge-neutral') }}">{{ m.status.replace('_',' ') }}</span>
+      {% if m.status in ['NOT_STARTED', 'IN_PROGRESS', 'CHANGES_REQUESTED'] %}
+      <form method="post" action="{{ url_for('student.submit_milestone', milestone_id=m.id) }}">
+        <button type="submit" class="btn btn-primary btn-sm">Submit for Review</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+{% elif tab == 'team' %}
+  {% for team in project.teams %}
+  <div class="card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Role</th><th>Email</th></tr></thead>
+        <tbody>
+          {% for m in team.members %}
+          <tr><td data-label="Name" class="row-title">{{ m.student.full_name }}</td><td data-label="Role"><span class="badge badge-info">{{ m.role_in_team }}</span></td><td data-label="Email">{{ m.student.college_email }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+{% elif tab == 'industry' %}
+  {% for collaboration in project.collaborations if collaboration.status == 'ACTIVE' %}
+  <div class="card card-body"><h3>Industry Partner</h3><div class="detail-list"><div class="row"><span class="label">Organization</span><span class="value">{{ collaboration.industry.organization.name }}</span></div><div class="row"><span class="label">Support</span><span class="value">{{ collaboration.role }}</span></div></div>{% for mentor in collaboration.industry.mentors if mentor.is_active %}<p><strong>{{ mentor.name }}</strong> · {{ mentor.designation or 'Industry mentor' }} · {{ mentor.expertise or '' }}</p>{% endfor %}</div>
+  {% else %}<div class="empty-state"><i class="fa-solid fa-handshake"></i>No approved industry partner for this project yet.</div>{% endfor %}
+
+{% elif tab == 'files' %}
+  <div class="card card-body">
+    {% set has_docs = false %}
+    {% for m in project.milestones %}{% for d in m.deliverables %}{% set has_docs = true %}
+      <div class="file-item"><span><i class="fa-solid fa-file"></i> {{ d.file_name }}</span></div>
+    {% endfor %}{% endfor %}
+    {% if not has_docs %}<div class="empty-state"><i class="fa-solid fa-folder-open"></i>No files uploaded yet.</div>{% endif %}
+  </div>
+{% elif tab == 'tasks' %}
+  <div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Task</th><th>Instructions</th><th>Due</th><th>Status</th><th>Work Submission</th></tr></thead><tbody>
+  {% for task in project.tasks if task.assigned_to_id == profile.id and task.status not in ['AI_RECOMMENDED'] %}<tr><td data-label="Task" class="row-title">{{ task.title }}{% if task.milestone %}<small style="display:block;color:var(--ink-500);">{{ task.milestone.title }}</small>{% endif %}</td><td data-label="Instructions">{{ task.description or '—' }}</td><td data-label="Due">{{ task.due_date or '—' }}</td><td data-label="Status"><span class="badge {{ 'badge-success' if task.status == 'APPROVED' else ('badge-warning' if task.status in ['SUBMITTED','FACULTY_REVIEW','CHANGES_REQUESTED'] else 'badge-neutral') }}" data-live-task-id="{{ task.id }}">{{ task.status.replace('_',' ') }}</span>{% if task.review %}<small style="display:block;color:var(--ink-500);">{{ task.review.remarks }}</small>{% endif %}</td><td data-label="Work Submission"><form method="post" action="{{ url_for('student.update_task_status', task_id=task.id) }}" style="display:flex;gap:6px;margin-bottom:8px;"><select name="status"><option value="NOT_STARTED" {{ 'selected' if task.status=='NOT_STARTED' }}>Not started</option><option value="IN_PROGRESS" {{ 'selected' if task.status=='IN_PROGRESS' }}>In progress</option></select><button class="btn btn-outline btn-sm" type="submit">Update</button></form>{% if task.status not in ['APPROVED'] %}<form method="post" action="{{ url_for('student.submit_task', task_id=task.id) }}"><textarea name="work_notes" rows="3" placeholder="Describe the work completed..." required>{{ task.submission.work_notes if task.submission else '' }}</textarea><input type="url" name="evidence_link" placeholder="Evidence link (optional)" value="{{ task.submission.evidence_link if task.submission else '' }}"><button class="btn btn-primary btn-sm" type="submit">Submit Work for Review</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="5">No active tasks assigned yet. Your faculty mentor will publish approved work here.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Login — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/yugkrit-logo.png') }}" alt="YugKrit logo" class="auth-logo-image">
+      <h2 style="margin-top:10px;">Welcome back</h2>
+      <p style="color:var(--ink-500);font-size:14px;">Log in to your YugKrit dashboard</p>
+    </div>
+
+    <div class="login-mode-tabs">
+      <span class="login-mode-tab active">Email + Password</span>
+      <a href="{{ url_for('auth.login_otp_request') }}" class="login-mode-tab">Phone + OTP</a>
+    </div>
+
+    <form method="post">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Log In</button>
+    </form>
+
+    <div class="auth-links">
+      Prefer your phone? <a href="{{ url_for('auth.login_otp_request') }}">Log in with phone + OTP</a><br><br>
+      Don't have an account? <a href="{{ url_for('auth.register_landing') }}">Join YugKrit</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

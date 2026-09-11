@@ -1,0 +1,34 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "YugKrit: seed database",
+            "type": "shell",
+            "command": "python database/seed.py",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "YugKrit: start Flask",
+            "type": "shell",
+            "command": "python app.py",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "flask",
+                "pattern": {
+                    "regexp": ".*"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting development server|Serving Flask app",
+                    "endsPattern": "Running on http://"
+                }
+            }
+        }
+    ]
+}

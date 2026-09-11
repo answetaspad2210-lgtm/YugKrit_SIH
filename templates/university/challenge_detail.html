@@ -1,0 +1,50 @@
+{% extends "university/_base.html" %}
+{% block title %}{{ challenge.title }} — {{ app_name }}{% endblock %}
+{% block dashboard_content %}
+<div class="breadcrumbs"><a href="{{ url_for('university.marketplace') }}">Marketplace</a> / {{ challenge.challenge_code }}</div>
+<div class="page-header">
+  <div><h1>{{ challenge.title }}</h1><p>{{ challenge.category.name if challenge.category else '—' }}</p></div>
+  <span class="badge {{ 'badge-danger' if challenge.priority_score>=70 else 'badge-warning' }}" style="font-size:14px;padding:8px 16px;">Priority {{ challenge.priority_score }}/100</span>
+</div>
+
+<div class="grid-2">
+  <div class="card card-body">
+    <h3>Description</h3>
+    <p>{{ challenge.description }}</p>
+    <div class="detail-list">
+      <div class="row"><span class="label">Affected Population</span><span class="value">{{ challenge.affected_population }}</span></div>
+      <div class="row"><span class="label">Urgency</span><span class="value">{{ challenge.urgency }}</span></div>
+      <div class="row"><span class="label">Location</span><span class="value">{{ challenge.location.district if challenge.location else '—' }}, {{ challenge.location.state if challenge.location else '' }}</span></div>
+      <div class="row"><span class="label">Suggested Skills</span><span class="value">{{ challenge.required_skills or '—' }}</span></div>
+      <div class="row"><span class="label">Status</span><span class="value"><span class="badge badge-neutral">{{ challenge.status }}</span></span></div>
+    </div>
+  </div>
+
+  <div class="card card-body">
+    <h3>Take Action</h3>
+    {% if university and challenge.assigned_university_id == university.id %}
+      <p style="font-size:13.5px;color:var(--ink-500);margin-bottom:14px;">This challenge is assigned to your university.</p>
+      <a href="{{ url_for('university.create_project', challenge_id=challenge.id) }}" class="btn btn-primary btn-block">Create Project</a>
+    {% elif existing_application %}
+      <p>You applied for this challenge. Status: <span class="badge badge-warning">{{ existing_application.status }}</span></p>
+      {% if existing_application.status == 'ACCEPTED' %}<a href="{{ url_for('university.create_project', challenge_id=challenge.id) }}" class="btn btn-primary btn-block">Create Project</a>{% endif %}
+    {% elif challenge.status in ['VERIFIED', 'ASSIGNED'] %}
+      <form method="post" action="{{ url_for('university.apply_challenge', challenge_id=challenge.id) }}">
+        <div class="form-group"><label>Your Pitch</label><textarea name="pitch" placeholder="Why is your university well suited for this challenge?" required></textarea></div>
+        <button type="submit" class="btn btn-primary btn-block">Apply for this Challenge</button>
+      </form>
+    {% else %}
+      <p style="font-size:13.5px;color:var(--ink-500);">This challenge is not currently open for applications.</p>
+    {% endif %}
+  </div>
+</div>
+{% if recommendations %}
+<div class="card card-body" style="margin-top:20px;">
+  <h3>AI Recommended Students</h3>
+  <p style="font-size:13px;color:var(--ink-500);">Recommendations are advisory. Faculty and university staff approve the final team.</p>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th>Student</th><th>Department</th><th>Skills matched</th><th>Score</th><th>Why</th></tr></thead><tbody>
+  {% for item in recommendations %}<tr><td data-label="Student" class="row-title">{{ item.student.full_name }}</td><td data-label="Department">{{ item.student.department or '—' }}</td><td data-label="Skills">{{ item.matched|join(', ') or 'No direct skill match' }}</td><td data-label="Score"><span class="badge {{ 'badge-success' if item.score >= 60 else 'badge-warning' }}">{{ item.score }}/100</span></td><td data-label="Why">{{ item.reasons|join('; ') }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endif %}
+{% endblock %}

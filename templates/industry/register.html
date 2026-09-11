@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Industry Registration — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="auth-page"><div class="auth-card wide">
+  <h2>Register Industry / Organization</h2><p class="auth-subtitle">Join YugKrit as a capability, technology, and implementation partner.</p>
+  <form method="post" data-industry-registration>
+    <h3 class="form-section-title">Organization Information</h3>
+    <div class="form-row"><div class="form-group"><label>Organization Name *</label><input name="organization_name" required></div><div class="form-group"><label>Organization Type *</label><select name="organization_type" required><option value="">Select type</option>{% for value in organization_types %}<option value="{{ value }}">{{ value }}</option>{% endfor %}</select></div></div>
+    <div class="form-row"><div class="form-group"><label>Industry Sector *</label><select name="sector" required data-sector-select><option value="">Select sector</option>{% for value in sectors %}<option value="{{ value }}">{{ value }}</option>{% endfor %}</select></div><div class="form-group"><label>Sub-sector *</label><select name="sub_sector" required data-subsector-select><option value="">Select a sector first</option></select></div></div>
+    <div class="form-row"><div class="form-group"><label>Organization Size</label><select name="organization_size"><option>Startup</option><option>Small</option><option>Medium</option><option>Large</option><option>Enterprise</option></select></div><div class="form-group"><label>Location</label><input name="location"></div></div>
+    <div class="form-row"><div class="form-group"><label>District</label><input name="district"></div><div class="form-group"><label>State</label><input name="state"></div></div>
+    <div class="form-group"><label>Website</label><input name="website" type="url" placeholder="https://example.org"></div>
+    <h3 class="form-section-title">Contact Information</h3>
+    <div class="form-group"><label>Contact Person *</label><input name="contact_person" required></div>
+    <div class="form-row"><div class="form-group"><label>Official Email *</label><input name="official_email" type="email" required></div><div class="form-group"><label>Phone *</label><input name="phone" type="tel" required pattern="[+0-9 ()-]{7,20}"></div></div>
+    <div class="form-group"><label>Organization Description</label><textarea name="description" rows="3"></textarea></div>
+    <h3 class="form-section-title">Capabilities</h3>
+    <div class="form-row">{% for field, label in [('expertise','Expertise'),('technologies','Technologies')] %}<div class="form-group"><label>{{ label }}</label><div class="multi-select" data-multi-select><input class="multi-select-search" type="search" placeholder="Search {{ label|lower }}..."><select name="{{ field }}" multiple data-chip-select>{% for option in capability_options[field] %}<option value="{{ option }}">{{ option }}</option>{% endfor %}</select><div class="selected-chips" aria-live="polite"></div></div></div>{% endfor %}</div>
+    <div class="form-row">{% for field, label in [('services','Services'),('csr_focus_areas','CSR Focus Areas')] %}<div class="form-group"><label>{{ label }}</label><div class="multi-select" data-multi-select><input class="multi-select-search" type="search" placeholder="Search {{ label|lower }}..."><select name="{{ field }}" multiple data-chip-select>{% for option in capability_options[field] %}<option value="{{ option }}">{{ option }}</option>{% endfor %}</select><div class="selected-chips" aria-live="polite"></div></div></div>{% endfor %}</div>
+    <div class="form-group"><label>Available Resources</label><div class="multi-select" data-multi-select><input class="multi-select-search" type="search" placeholder="Search resources..."><select name="available_resources" multiple data-chip-select>{% for option in capability_options.available_resources %}<option value="{{ option }}">{{ option }}</option>{% endfor %}</select><div class="selected-chips" aria-live="polite"></div></div></div>
+    <h3 class="form-section-title">Account Security</h3>
+    <div class="form-row"><div class="form-group"><label>Password *</label><div class="password-field"><input name="password" type="password" required minlength="8" id="industry-password"><button type="button" class="password-toggle" aria-label="Show password" data-password-toggle><i class="fa-solid fa-eye"></i></button></div></div><div class="form-group"><label>Confirm Password *</label><div class="password-field"><input name="confirm_password" type="password" required minlength="8" data-match="industry-password"><button type="button" class="password-toggle" aria-label="Show password" data-password-toggle><i class="fa-solid fa-eye"></i></button></div></div></div>
+    <button class="btn btn-primary btn-block btn-lg">Create Industry Account</button>
+  </form>
+</div></div>
+{% endblock %}
+{% block extra_js %}<script>window.industrySubsectors = {{ sector_subsectors|tojson }};</script>{% endblock %}
